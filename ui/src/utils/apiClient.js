@@ -27,3 +27,8 @@ export async function postAction(gameId, action = undefined) {
   );
   return response.data;
 }
+
+export async function getSimulateGame(gameId, stateIndex = "latest") {
+  const response = await axios.get(`${API_URL}/api/games/${gameId}/states/${stateIndex}/simulate?count=10`);
+  return response.data;
+}

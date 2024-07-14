@@ -2,7 +2,7 @@ import json
 
 from flask import Response, Blueprint, jsonify, abort, request
 
-from catanatron_server.models import get_game_metadata, get_games_info, serialize_game_state, load_game_state
+from catanatron_server.views import get_game_metadata, get_games_info, serialize_game_state, load_game_state
 from catanatron.json import GameEncoder, action_from_json
 from catanatron.models.player import Color, RandomPlayer
 from catanatron.game import Game
@@ -56,11 +56,9 @@ def get_game_endpoint(game_id, state_index):
     )
 
 
-@bp.route("/games/<string:game_id>/states/<string:state_index>/actions", methods=["POST"])
-def post_action_endpoint(game_id, state_index):
-    state_index = None if state_index == "latest" else int(state_index)
-
-    game = load_game_state(game_id, state_index)
+@bp.route("/games/<string:game_id>/actions", methods=["POST"])
+def post_action_endpoint(game_id):
+    game = load_game_state(game_id)
     if game is None:
         abort(404, description="Resource not found")
 
@@ -149,6 +147,38 @@ def get_info():
         "games_uuid": games_uuid
         })
 
+
+# simulate a game from a given state
+@bp.route(
+    "/games/<string:game_id>/states/<string:state_index>/simulate", methods=["GET"]
+)
+def simulate_game(game_id, state_index):
+    state_index = None if state_index == "latest" else int(state_index)
+    game = load_game_state(game_id, state_index)
+    if game is None:
+        abort(404, description="Resource not found")
+
+    # read simulation count from query params
+    simulation_count = request.args.get("count", default=1, type=int)
+
+    # simulate the games
+    winners = []
+    for _ in range(simulation_count):
+        while game.winning_color() is None:
+            game.play_tick()
+        winners.append(game.winning_color().value)
+        game = load_game_state(game_id, state_index)
+
+    # calculate win rate for each player
+    win_rate = {}
+    for player in game.state.colors:
+        win_rate[player.value] = f"{(winners.count(player.value) / simulation_count) * 100}%"
+
+    return jsonify({
+        "number_of_simulations": simulation_count,
+        "number_of_players": len(game.state.colors),
+        "win_rate": win_rate,
+    })
 
 # @app.route("/games/<string:game_id>/value-function", methods=["GET"])
 # def get_game_value_function(game_id):

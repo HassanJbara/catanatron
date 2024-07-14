@@ -63,7 +63,7 @@ def get_game_metadata(game_id):
 
 
 # load game state from pickle file
-def load_game_state(game_id, state_index):
+def load_game_state(game_id, state_index=None):
     pickle_game_dir = f"{pickle_game_states_dir}/{game_id}"
 
     # check if game folder exists

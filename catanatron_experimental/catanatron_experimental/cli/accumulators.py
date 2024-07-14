@@ -15,7 +15,7 @@ from catanatron.state_functions import (
     get_player_buildings,
 )
 from catanatron.models.enums import VICTORY_POINT, SETTLEMENT, CITY
-from catanatron_server.models import serialize_game_state, save_game_metadata
+from catanatron_server.views import serialize_game_state
 from catanatron_experimental.utils import formatSecs
 from catanatron_experimental.machine_learning.utils import (
     get_discounted_return,
